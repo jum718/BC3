@@ -3,13 +3,15 @@ import numpy as np
 import joblib
 import pandas as pd
 
-# タイトル
-st.title("Battery Type Classifier")
+# モデル・スケーラー・ラベルエンコーダーのロード（セッションごとに実行）
+@st.cache_resource
+def load_model():
+    model = joblib.load("battery_model.pkl")
+    scaler = joblib.load("scaler.pkl")
+    label_encoder = joblib.load("label_encoder.pkl")
+    return model, scaler, label_encoder
 
-# モデルのロード
-model = joblib.load("battery_model.pkl")
-scaler = joblib.load("scaler.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+model, scaler, label_encoder = load_model()
 
 # ユーザー入力
 st.sidebar.header("Enter Battery Specifications")
@@ -19,8 +21,12 @@ battery_acid = st.sidebar.number_input("Battery Acid (pH)", min_value=0.5, max_v
 plastic_weight = st.sidebar.number_input("Plastic Weight (kg)", min_value=0.5, max_value=10.0, value=3.5)
 lead_weight = st.sidebar.number_input("Lead Weight (kg)", min_value=1.0, max_value=20.0, value=9.5)
 
+# セッション変数をリセットする関数
+def reset_prediction():
+    st.session_state.prediction = None
+
 # 予測ボタン
-if st.sidebar.button("Predict Battery Type"):
+if st.sidebar.button("Predict Battery Type", on_click=reset_prediction):
     # 入力データを配列に変換
     new_data = np.array([[battery_weight, battery_density, battery_acid, plastic_weight, lead_weight]])
 
@@ -35,6 +41,10 @@ if st.sidebar.button("Predict Battery Type"):
     predicted_label = model.predict(new_data_scaled)
     predicted_battery_type = label_encoder.inverse_transform(predicted_label)
 
-    # 結果表示
+    # 予測結果をセッション変数に保存
+    st.session_state.prediction = predicted_battery_type[0]
+
+# 結果表示（予測が実行された後のみ表示）
+if "prediction" in st.session_state and st.session_state.prediction:
     st.subheader("Prediction Result")
-    st.write(f"Predicted Battery Type: **{predicted_battery_type[0]}**")
+    st.write(f"Predicted Battery Type: **{st.session_state.prediction}**")
