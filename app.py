@@ -15,6 +15,10 @@ except FileNotFoundError:
     st.error("モデルファイルが見つかりません。train_model.py を実行してください。")
     st.stop()
 
+# セッションステートの初期化
+if "predictions" not in st.session_state:
+    st.session_state.predictions = {}
+
 # ユーザー入力
 st.sidebar.header("Enter Battery Specifications")
 battery_weight = st.sidebar.number_input("Battery Weight (kg)", min_value=5.0, max_value=50.0, value=15.0)
@@ -32,8 +36,29 @@ if st.sidebar.button("Predict Battery Type"):
     try:
         new_data_scaled = scaler.transform(new_data_df)
         predicted_label = model.predict(new_data_scaled)
-        predicted_battery_type = label_encoder.inverse_transform(predicted_label)
+        predicted_battery_type = label_encoder.inverse_transform(predicted_label)[0]
+
+        # カウントを更新
+        if predicted_battery_type in st.session_state.predictions:
+            st.session_state.predictions[predicted_battery_type] += 1
+        else:
+            st.session_state.predictions[predicted_battery_type] = 1
+
         st.subheader("Prediction Result")
-        st.write(f"Predicted Battery Type: **{predicted_battery_type[0]}**")
+        st.write(f"Predicted Battery Type: **{predicted_battery_type}**")
+
     except Exception as e:
         st.error(f"予測中にエラーが発生しました: {e}")
+
+# 結果の統計表示
+st.subheader("Prediction Counts")
+if st.session_state.predictions:
+    df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Battery Type", "Count"])
+    st.dataframe(df_counts)
+else:
+    st.write("まだ予測結果はありません。")
+
+# リセットボタン
+if st.button("Reset Counts"):
+    st.session_state.predictions = {}
+    st.success("カウントをリセットしました。")
