@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import joblib
 import pandas as pd
+import random
 
 # タイトル
 st.title("Battery Type Classifier")
@@ -19,13 +20,40 @@ except FileNotFoundError:
 if "predictions" not in st.session_state:
     st.session_state.predictions = {}
 
+# ランダム値を生成する関数
+def generate_random_values():
+    return {
+        "battery_weight": round(random.uniform(5.0, 50.0), 1),
+        "battery_density": random.randint(10, 100),
+        "battery_acid": round(random.uniform(0.5, 2.0), 2),
+        "plastic_weight": round(random.uniform(0.5, 10.0), 1),
+        "lead_weight": round(random.uniform(1.0, 20.0), 1)
+    }
+
+# ランダム入力ボタンが押された場合、セッションステートを更新
+if "random_values" not in st.session_state:
+    st.session_state.random_values = generate_random_values()
+
+if st.sidebar.button("Generate Random Values"):
+    st.session_state.random_values = generate_random_values()
+
 # ユーザー入力
 st.sidebar.header("Enter Battery Specifications")
-battery_weight = st.sidebar.number_input("Battery Weight (kg)", min_value=5.0, max_value=50.0, value=15.0)
-battery_density = st.sidebar.number_input("Battery Density (Wh/kg)", min_value=10, max_value=100, value=35)
-battery_acid = st.sidebar.number_input("Battery Acid (pH)", min_value=0.5, max_value=2.0, value=1.2)
-plastic_weight = st.sidebar.number_input("Plastic Weight (kg)", min_value=0.5, max_value=10.0, value=3.5)
-lead_weight = st.sidebar.number_input("Lead Weight (kg)", min_value=1.0, max_value=20.0, value=9.5)
+battery_weight = st.sidebar.number_input(
+    "Battery Weight (kg)", min_value=5.0, max_value=50.0, value=st.session_state.random_values["battery_weight"]
+)
+battery_density = st.sidebar.number_input(
+    "Battery Density (Wh/kg)", min_value=10, max_value=100, value=st.session_state.random_values["battery_density"]
+)
+battery_acid = st.sidebar.number_input(
+    "Battery Acid (pH)", min_value=0.5, max_value=2.0, value=st.session_state.random_values["battery_acid"]
+)
+plastic_weight = st.sidebar.number_input(
+    "Plastic Weight (kg)", min_value=0.5, max_value=10.0, value=st.session_state.random_values["plastic_weight"]
+)
+lead_weight = st.sidebar.number_input(
+    "Lead Weight (kg)", min_value=1.0, max_value=20.0, value=st.session_state.random_values["lead_weight"]
+)
 
 # 予測ボタン
 if st.sidebar.button("Predict Battery Type"):
