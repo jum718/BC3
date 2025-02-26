@@ -1,16 +1,26 @@
 import numpy as np
 import joblib
 import pandas as pd
+import argparse
 
-# モデル、スケーラー、ラベルエンコーダーをロード
+# コマンドライン引数の設定
+parser = argparse.ArgumentParser()
+parser.add_argument("--weight", type=float, required=True, help="Battery Weight (kg)")
+parser.add_argument("--density", type=int, required=True, help="Battery Density (Wh/kg)")
+parser.add_argument("--acid", type=float, required=True, help="Battery Acid (pH)")
+parser.add_argument("--plastic", type=float, required=True, help="Plastic Weight (kg)")
+parser.add_argument("--lead", type=float, required=True, help="Lead Weight (kg)")
+args = parser.parse_args()
+
+# モデル、スケーラー、エンコーダーをロード
 model = joblib.load("battery_model.pkl")
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-# 新しいデータ（例：バッテリーの特性を入力）
-new_data = np.array([[15.0, 35, 1.2, 3.5, 9.5]])
+# 入力データ
+new_data = np.array([[args.weight, args.density, args.acid, args.plastic, args.lead]])
 
-# DataFrame に変換（学習時の特徴量と同じカラム名を持つ）
+# DataFrame に変換
 X_columns = ["Battery Weight (kg)", "Battery Density (Wh/kg)", "Battery Acid (pH)", "Plastic Weight (kg)", "Lead Weight (kg)"]
 new_data_df = pd.DataFrame(new_data, columns=X_columns)
 
