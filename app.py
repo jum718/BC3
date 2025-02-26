@@ -3,6 +3,7 @@ import numpy as np
 import joblib
 import pandas as pd
 import random
+import io
 
 # タイトル
 st.title("Battery Type Classifier")
@@ -19,6 +20,9 @@ except FileNotFoundError:
 # セッションステートの初期化
 if "predictions" not in st.session_state:
     st.session_state.predictions = {}
+
+if "history" not in st.session_state:
+    st.session_state.history = []
 
 # ランダム値を生成する関数
 def generate_random_values():
@@ -72,6 +76,17 @@ if st.sidebar.button("Predict Battery Type"):
         else:
             st.session_state.predictions[predicted_battery_type] = 1
 
+        # 入力値と結果を履歴に保存
+        new_entry = {
+            "Battery Weight (kg)": battery_weight,
+            "Battery Density (Wh/kg)": battery_density,
+            "Battery Acid (pH)": battery_acid,
+            "Plastic Weight (kg)": plastic_weight,
+            "Lead Weight (kg)": lead_weight,
+            "Predicted Battery Type": predicted_battery_type
+        }
+        st.session_state.history.append(new_entry)
+
         st.subheader("Prediction Result")
         st.write(f"Predicted Battery Type: **{predicted_battery_type}**")
 
@@ -86,7 +101,25 @@ if st.session_state.predictions:
 else:
     st.write("まだ予測結果はありません。")
 
+# CSVダウンロード用データフレーム作成
+if st.session_state.history:
+    df_history = pd.DataFrame(st.session_state.history)
+
+    # CSVデータをバイトストリームに変換
+    csv_buffer = io.StringIO()
+    df_history.to_csv(csv_buffer, index=False)
+    csv_data = csv_buffer.getvalue()
+
+    # ダウンロードボタン
+    st.download_button(
+        label="Download CSV",
+        data=csv_data,
+        file_name="battery_predictions.csv",
+        mime="text/csv"
+    )
+
 # リセットボタン
-if st.button("Reset Counts"):
+if st.button("Reset Counts & History"):
     st.session_state.predictions = {}
-    st.success("カウントをリセットしました。")
+    st.session_state.history = []
+    st.success("カウントと履歴をリセットしました。")
