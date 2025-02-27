@@ -15,29 +15,29 @@ if not all(col in df.columns for col in expected_columns):
 X = df.drop(columns=["Type"])
 y = df["Type"]
 
-# Magnetic Response列を数値に変換
+# Convert Magnetic Response columns to numbers
 X["Magnetic Response"] = X["Magnetic Response"].map({"Non-magnetic": 0, "Magnetic": 1})
 
-# Elemental Composition列をOne-Hotエンコーディング
+# One-Hot encoding of Elemental Composition columns
 X = pd.get_dummies(X, columns=["Elemental Composition"], dummy_na=False)
 
-# Physical State列をOne-Hotエンコーディング
+# One-Hot encoding of Physical State column
 X = pd.get_dummies(X, columns=["Physical State"], dummy_na=False)
 
-# Infrared (IR) Signature列を数値に変換
+# Converts an Infrared (IR) Signature string to a number.
 X["Infrared (IR) Signature"] = X["Infrared (IR) Signature"].map({"Infrared": 0, "Visible": 1, "None": 2})
 
-# UV Reactivity列を数値に変換
+# UV Reactivity columns converted to numbers
 X["UV Reactivity"] = X["UV Reactivity"].map({"Reactive": 1, "Non-reactive": 0})
 
-# Acoustic Response列を数値に変換
+# Converts Acoustic Response columns to numbers
 X["Acoustic Response"] = X["Acoustic Response"].map({"High": 2, "Medium": 1, "Low": 0})
 
-# 欠損値の処理（例：平均値で補完）
+# Processing of missing values (e.g., supplemented by the mean)
 X_numeric = X.select_dtypes(include=['number'])
 X[X_numeric.columns] = X_numeric.fillna(X_numeric.mean())
 
-# 数値として解釈できない文字列の処理（例：行を削除）
+# Processing of strings that cannot be interpreted as numbers (e.g., delete lines)
 X = X[pd.to_numeric(X["Density (g/cm3)"], errors='coerce').notna()]
 
 # label encoding
