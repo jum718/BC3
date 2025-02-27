@@ -87,19 +87,19 @@ if st.sidebar.button("Predict Material Type"):
         
         # 予測結果のカウント
         st.session_state.predictions[predicted_material_type] = st.session_state.predictions.get(predicted_material_type, 0) + 1
-        st.session_state.history.append(new_data.assign(Predicted_Type=predicted_material_type))
         
         st.subheader("Prediction Result")
         st.write(f"Predicted Material Type: **{predicted_material_type}**")
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
 
-# 予測履歴の表示とCSVダウンロード
-if st.session_state.history:
-    df_history = pd.concat(st.session_state.history)
-    st.dataframe(df_history)
-    csv_data = df_history.to_csv(index=False)
-    st.download_button("Download Predictions CSV", csv_data, "predictions.csv", "text/csv")
+# 予測結果のカウント表示
+st.subheader("Prediction Counts")
+if st.session_state.predictions:
+    df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Predicted Type", "Count"])
+    st.dataframe(df_counts)
+else:
+    st.write("No predictions yet.")
 
 # リセットボタン
 if st.button("Reset Counts & History"):
