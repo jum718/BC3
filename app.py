@@ -98,7 +98,7 @@ if st.sidebar.button("Predict Material Type"):
 # Count display of forecast results
 st.subheader("Prediction Counts")
 if not st.session_state.predictions:
-    st.session_state.predictions = {"Predicted Type": 0}
+    st.session_state.predictions = {"Plastic (PP/ABS)": 0, "Lead (Pb)": 0, "Sulfuric Acid (H2SO4)": 0}
 if st.session_state.predictions:
     df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Predicted Type", "Count"])
     st.dataframe(df_counts)
