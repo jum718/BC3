@@ -5,10 +5,10 @@ import pandas as pd
 import random
 import io
 
-# タイトル
+# Title
 st.title("Material Type Classifier")
 
-# モデルのロード
+# Model Loading
 try:
     model = joblib.load("Type.pkl")
     scaler = joblib.load("scaler.pkl")
@@ -17,13 +17,13 @@ except FileNotFoundError:
     st.error("Model files not found. Please check the model directory.")
     st.stop()
 
-# セッションステートの初期化
+# Session state initialization
 if "predictions" not in st.session_state:
     st.session_state.predictions = {}
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# ランダム値生成関数
+# Random Value Generation Functions
 def generate_random_values():
     return {
         "density": round(random.uniform(1.0, 10.0), 2),
@@ -46,7 +46,7 @@ if "random_values" not in st.session_state:
 if st.sidebar.button("Generate Random Values"):
     st.session_state.random_values = generate_random_values()
 
-# ユーザー入力
+# user input
 st.sidebar.header("Enter Material Specifications")
 density = st.sidebar.number_input("Density (g/cm3)", min_value=1.0, max_value=10.0, value=st.session_state.random_values["density"])
 xray = st.sidebar.number_input("X-ray Absorption (HU)", min_value=50, max_value=500, value=st.session_state.random_values["xray"])
@@ -61,7 +61,7 @@ acoustic = st.sidebar.selectbox("Acoustic Response", ["High", "Medium", "Low"], 
 composition = st.sidebar.selectbox("Elemental Composition", ["C, H, O", "H, S, O", "Pb"], index=["C, H, O", "H, S, O", "Pb"].index(st.session_state.random_values["composition"]))
 physical_state = st.sidebar.selectbox("Physical State", ["Liquid", "Solid"], index=["Liquid", "Solid"].index(st.session_state.random_values["physical_state"]))
 
-# 予測ボタン
+# Predict button
 if st.sidebar.button("Predict Material Type"):
     new_data = pd.DataFrame({
         "Density (g/cm3)": [density],
@@ -85,7 +85,7 @@ if st.sidebar.button("Predict Material Type"):
         predicted_label = model.predict(new_data_scaled)
         predicted_material_type = label_encoder.inverse_transform(predicted_label)[0]
         
-        # 予測結果のカウント
+        # Prediction Result Counting
         st.session_state.predictions[predicted_material_type] = st.session_state.predictions.get(predicted_material_type, 0) + 1
         
         st.subheader("Prediction Result")
@@ -93,7 +93,7 @@ if st.sidebar.button("Predict Material Type"):
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
 
-# 予測結果のカウント表示
+# Count display of forecast results
 st.subheader("Prediction Counts")
 if st.session_state.predictions:
     df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Predicted Type", "Count"])
@@ -101,7 +101,7 @@ if st.session_state.predictions:
 else:
     st.write("No predictions yet.")
 
-# リセットボタン
+# reset button
 if st.button("Reset Counts & History"):
     st.session_state.predictions = {}
     st.session_state.history = []
