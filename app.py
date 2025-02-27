@@ -35,7 +35,9 @@ def generate_random_values():
         "infrared": random.choice(["Infrared", "Visible", "None"]),
         "uv": random.choice(["Reactive", "Non-reactive"]),
         "electrical": round(random.uniform(0.1, 10.0), 2),
-        "acoustic": random.choice(["High", "Medium", "Low"])
+        "acoustic": random.choice(["High", "Medium", "Low"]),
+        "composition": random.choice(["C, H, O", "H, S, O", "Pb"]),
+        "physical_state": random.choice(["Liquid", "Solid"])
     }
 
 if "random_values" not in st.session_state:
@@ -56,6 +58,8 @@ infrared = st.sidebar.selectbox("Infrared (IR) Signature", ["Infrared", "Visible
 uv = st.sidebar.selectbox("UV Reactivity", ["Reactive", "Non-reactive"], index=["Reactive", "Non-reactive"].index(st.session_state.random_values["uv"]))
 electrical = st.sidebar.number_input("Electrical Conductivity", min_value=0.1, max_value=10.0, value=st.session_state.random_values["electrical"])
 acoustic = st.sidebar.selectbox("Acoustic Response", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(st.session_state.random_values["acoustic"]))
+composition = st.sidebar.selectbox("Elemental Composition", ["C, H, O", "H, S, O", "Pb"], index=["C, H, O", "H, S, O", "Pb"].index(st.session_state.random_values["composition"]))
+physical_state = st.sidebar.selectbox("Physical State", ["Liquid", "Solid"], index=["Liquid", "Solid"].index(st.session_state.random_values["physical_state"]))
 
 # 予測ボタン
 if st.sidebar.button("Predict Material Type"):
@@ -69,64 +73,19 @@ if st.sidebar.button("Predict Material Type"):
         "Infrared (IR) Signature": [0 if infrared == "Infrared" else 1 if infrared == "Visible" else 2],
         "UV Reactivity": [1 if uv == "Reactive" else 0],
         "Electrical Conductivity": [electrical],
-        "Acoustic Response": [2 if acoustic == "High" else 1 if acoustic == "Medium" else 0]
+        "Acoustic Response": [2 if acoustic == "High" else 1 if acoustic == "Medium" else 0],
+        "Elemental Composition_" + composition: [1],
+        "Physical State_" + physical_state: [1]
     })
+    
+    new_data = new_data.reindex(columns=scaler.feature_names_in_, fill_value=0)
 
     try:
         new_data_scaled = scaler.transform(new_data)
         predicted_label = model.predict(new_data_scaled)
         predicted_material_type = label_encoder.inverse_transform(predicted_label)[0]
-
-        if predicted_material_type in st.session_state.predictions:
-            st.session_state.predictions[predicted_material_type] += 1
-        else:
-            st.session_state.predictions[predicted_material_type] = 1
-
-        new_entry = {
-            "Density (g/cm3)": density,
-            "X-ray Absorption (HU)": xray,
-            "Energy Spectrum (keV)": energy,
-            "Magnetic Response": magnetic,
-            "Weight Contribution": weight,
-            "Thermal Conductivity": thermal,
-            "Infrared (IR) Signature": infrared,
-            "UV Reactivity": uv,
-            "Electrical Conductivity": electrical,
-            "Acoustic Response": acoustic,
-            "Predicted Material Type": predicted_material_type
-        }
-        st.session_state.history.append(new_entry)
-
+        
         st.subheader("Prediction Result")
         st.write(f"Predicted Material Type: **{predicted_material_type}**")
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
-
-# 予測回数の表示
-st.subheader("Prediction Counts")
-if st.session_state.predictions:
-    df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Material Type", "Count"])
-    st.dataframe(df_counts)
-else:
-    st.write("No predictions yet.")
-
-# CSV ダウンロード
-if st.session_state.history:
-    df_history = pd.DataFrame(st.session_state.history)
-    csv_buffer = io.StringIO()
-    df_history.to_csv(csv_buffer, index=False)
-    csv_data = csv_buffer.getvalue()
-
-    st.download_button(
-        label="Download CSV",
-        data=csv_data,
-        file_name="material_predictions.csv",
-        mime="text/csv"
-    )
-
-# リセットボタン
-if st.button("Reset Counts & History"):
-    st.session_state.predictions = {}
-    st.session_state.history = []
-    st.success("Counts and history have been reset.")
-    st.rerun()
