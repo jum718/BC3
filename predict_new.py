@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 import argparse
 
-# コマンドライン引数の設定
+# Setting Command Line Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--density", type=float, required=True, help="Material Density (g/cm3)")
 parser.add_argument("--xray", type=int, required=True, help="X-ray Absorption (HU)")
@@ -17,12 +17,12 @@ parser.add_argument("--electrical", type=float, required=True, help="Electrical 
 parser.add_argument("--acoustic", type=str, required=True, choices=["High", "Medium", "Low"], help="Acoustic Response")
 args = parser.parse_args()
 
-# モデル、スケーラー、エンコーダのロード
+# Load models, scalers, and encoders
 model = joblib.load("Type.pkl")
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-# 入力データの作成
+# Creation of input data
 new_data = pd.DataFrame({
     "Density (g/cm3)": [args.density],
     "X-ray Absorption (HU)": [args.xray],
@@ -36,12 +36,12 @@ new_data = pd.DataFrame({
     "Acoustic Response": [2 if args.acoustic == "High" else 1 if args.acoustic == "Medium" else 0]
 })
 
-# スケーリング適用
+# Scaling Application
 new_data_scaled = scaler.transform(new_data)
 
-# 予測の実施
+# Implementation of forecasts
 predicted_label = model.predict(new_data_scaled)
 predicted_material_type = label_encoder.inverse_transform(predicted_label)
 
-# 結果の表示
+# Display Results
 print("Predicted Material Type:", predicted_material_type[0])
