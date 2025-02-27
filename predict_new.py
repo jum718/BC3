@@ -3,33 +3,45 @@ import joblib
 import pandas as pd
 import argparse
 
-# Setting Command Line Arguments
+# コマンドライン引数の設定
 parser = argparse.ArgumentParser()
-parser.add_argument("--weight", type=float, required=True, help="Battery Weight (kg)")
-parser.add_argument("--density", type=int, required=True, help="Battery Density (Wh/kg)")
-parser.add_argument("--acid", type=float, required=True, help="Battery Acid (pH)")
-parser.add_argument("--plastic", type=float, required=True, help="Plastic Weight (kg)")
-parser.add_argument("--lead", type=float, required=True, help="Lead Weight (kg)")
+parser.add_argument("--density", type=float, required=True, help="Material Density (g/cm3)")
+parser.add_argument("--xray", type=int, required=True, help="X-ray Absorption (HU)")
+parser.add_argument("--energy", type=float, required=True, help="Energy Spectrum (keV)")
+parser.add_argument("--magnetic", type=str, required=True, choices=["Non-magnetic", "Magnetic"], help="Magnetic Response")
+parser.add_argument("--weight", type=float, required=True, help="Weight Contribution")
+parser.add_argument("--thermal", type=float, required=True, help="Thermal Conductivity")
+parser.add_argument("--infrared", type=str, required=True, choices=["Infrared", "Visible", "None"], help="Infrared (IR) Signature")
+parser.add_argument("--uv", type=str, required=True, choices=["Reactive", "Non-reactive"], help="UV Reactivity")
+parser.add_argument("--electrical", type=float, required=True, help="Electrical Conductivity")
+parser.add_argument("--acoustic", type=str, required=True, choices=["High", "Medium", "Low"], help="Acoustic Response")
 args = parser.parse_args()
 
-# Load models, scalers, and encoders
-model = joblib.load("battery_model.pkl")
+# モデル、スケーラー、エンコーダのロード
+model = joblib.load("Type.pkl")
 scaler = joblib.load("scaler.pkl")
 label_encoder = joblib.load("label_encoder.pkl")
 
-# input data
-new_data = np.array([[args.weight, args.density, args.acid, args.plastic, args.lead]])
+# 入力データの作成
+new_data = pd.DataFrame({
+    "Density (g/cm3)": [args.density],
+    "X-ray Absorption (HU)": [args.xray],
+    "Energy Spectrum (keV)": [args.energy],
+    "Magnetic Response": [1 if args.magnetic == "Magnetic" else 0],
+    "Weight Contribution": [args.weight],
+    "Thermal Conductivity": [args.thermal],
+    "Infrared (IR) Signature": [0 if args.infrared == "Infrared" else 1 if args.infrared == "Visible" else 2],
+    "UV Reactivity": [1 if args.uv == "Reactive" else 0],
+    "Electrical Conductivity": [args.electrical],
+    "Acoustic Response": [2 if args.acoustic == "High" else 1 if args.acoustic == "Medium" else 0]
+})
 
-# Convert to DataFrame
-X_columns = ["Battery Weight (kg)", "Battery Density (Wh/kg)", "Battery Acid (pH)", "Plastic Weight (kg)", "Lead Weight (kg)"]
-new_data_df = pd.DataFrame(new_data, columns=X_columns)
+# スケーリング適用
+new_data_scaled = scaler.transform(new_data)
 
-# standardization
-new_data_scaled = scaler.transform(new_data_df)
-
-# prediction
+# 予測の実施
 predicted_label = model.predict(new_data_scaled)
-predicted_battery_type = label_encoder.inverse_transform(predicted_label)
+predicted_material_type = label_encoder.inverse_transform(predicted_label)
 
-# Show Results
-print("Predicted battery type:", predicted_battery_type[0])
+# 結果の表示
+print("Predicted Material Type:", predicted_material_type[0])
