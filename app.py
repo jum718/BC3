@@ -24,7 +24,7 @@ if "history" not in st.session_state:
     st.session_state.history = []
 
 # sidebar header
-st.sidebar.header("Data from Laser")
+st.sidebar.header("Material Specifications received from Laser")
 
 # Random Value Generation Functions
 def generate_random_values():
@@ -50,7 +50,6 @@ if st.sidebar.button("Generate Random Values"):
     st.session_state.random_values = generate_random_values()
 
 # user input
-st.sidebar.header("Enter Material Specifications")
 density = st.sidebar.number_input("Density (g/cm3)", min_value=1.0, max_value=10.0, value=st.session_state.random_values["density"])
 xray = st.sidebar.number_input("X-ray Absorption (HU)", min_value=50, max_value=500, value=st.session_state.random_values["xray"])
 energy = st.sidebar.number_input("Energy Spectrum (keV)", min_value=1.0, max_value=10.0, value=st.session_state.random_values["energy"])
