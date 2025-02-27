@@ -23,6 +23,9 @@ if "predictions" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# sidebar header
+st.sidebar.header("Data from Laser")
+
 # Random Value Generation Functions
 def generate_random_values():
     return {
