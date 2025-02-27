@@ -124,4 +124,5 @@ if st.button("Reset Counts & History"):
     st.success("Counts and history have been reset.")
 
     # Force immediate UI update
-    st.experimental_rerun()
+    st.rerun()  # Updated from st.experimental_rerun()
+
