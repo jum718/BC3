@@ -6,7 +6,7 @@ import random
 import io
 
 # Title
-st.title("Material Type Classifier")
+st.title("Material Type Classifier Demo")
 
 # Model Loading
 try:
