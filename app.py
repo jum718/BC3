@@ -66,8 +66,12 @@ physical_state = st.sidebar.selectbox("Physical State", ["Liquid", "Solid"], ind
 
 # Prediction result display
 st.subheader("Prediction Result")
+
+# 予測結果がない場合は "-" を表示
+display_text = st.session_state.predicted_material_type if st.session_state.predicted_material_type else "-"
+
 st.markdown(
-    f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {st.session_state.predicted_material_type}</b></p>',
+    f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {display_text}</b></p>',
     unsafe_allow_html=True
 )
 
@@ -100,11 +104,8 @@ if st.sidebar.button("Predict Material Type"):
             st.session_state.predictions.get(st.session_state.predicted_material_type, 0) + 1
         )
 
-        # Display updated prediction result
-        st.markdown(
-            f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {st.session_state.predicted_material_type}</b></p>',
-            unsafe_allow_html=True
-        )
+        # **結果を更新**
+        st.experimental_rerun()
 
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
