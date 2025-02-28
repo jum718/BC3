@@ -91,6 +91,7 @@ if st.sidebar.button("Predict Material Type"):
         st.session_state.predictions[predicted_material_type] = st.session_state.predictions.get(predicted_material_type, 0) + 1
         
         st.subheader("Prediction Result")
+        st.markdown(f'<p style="font-size:24px; color:red;"><b>Predicted Material Type: {predicted_material_type}</b></p>', unsafe_allow_html=True)
         st.write(f"Predicted Material Type: **{predicted_material_type}**")
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
