@@ -3,7 +3,6 @@ import numpy as np
 import joblib
 import pandas as pd
 import random
-import io
 
 # Title
 st.title("Material Type Classifier Demo")
@@ -19,11 +18,13 @@ except FileNotFoundError:
 
 # Session state initialization
 if "predictions" not in st.session_state:
-    st.session_state.predictions = {}
+    st.session_state.predictions = {"Plastic (PP/ABS)": 0, "Lead (Pb)": 0, "Sulfuric Acid (H2SO4)": 0}
 if "history" not in st.session_state:
     st.session_state.history = []
+if "predicted_material_type" not in st.session_state:
+    st.session_state.predicted_material_type = ""
 
-# sidebar header
+# Sidebar header
 st.sidebar.header("Material Specifications received from Laser")
 
 # Random Value Generation Functions
@@ -49,21 +50,28 @@ if "random_values" not in st.session_state:
 if st.sidebar.button("Generate Random Values"):
     st.session_state.random_values = generate_random_values()
 
-# user input
-density = st.sidebar.number_input("Density (g/cm3)", min_value=1.0, max_value=10.0, value=st.session_state.random_values["density"])
-xray = st.sidebar.number_input("X-ray Absorption (HU)", min_value=50, max_value=500, value=st.session_state.random_values["xray"])
-energy = st.sidebar.number_input("Energy Spectrum (keV)", min_value=1.0, max_value=10.0, value=st.session_state.random_values["energy"])
+# User input fields
+density = st.sidebar.number_input("Density (g/cm3)", 1.0, 10.0, st.session_state.random_values["density"])
+xray = st.sidebar.number_input("X-ray Absorption (HU)", 50, 500, st.session_state.random_values["xray"])
+energy = st.sidebar.number_input("Energy Spectrum (keV)", 1.0, 10.0, st.session_state.random_values["energy"])
 magnetic = st.sidebar.selectbox("Magnetic Response", ["Non-magnetic", "Magnetic"], index=["Non-magnetic", "Magnetic"].index(st.session_state.random_values["magnetic"]))
-weight = st.sidebar.number_input("Weight Contribution", min_value=0.1, max_value=5.0, value=st.session_state.random_values["weight"])
-thermal = st.sidebar.number_input("Thermal Conductivity", min_value=10.0, max_value=200.0, value=st.session_state.random_values["thermal"])
+weight = st.sidebar.number_input("Weight Contribution", 0.1, 5.0, st.session_state.random_values["weight"])
+thermal = st.sidebar.number_input("Thermal Conductivity", 10.0, 200.0, st.session_state.random_values["thermal"])
 infrared = st.sidebar.selectbox("Infrared (IR) Signature", ["Infrared", "Visible", "None"], index=["Infrared", "Visible", "None"].index(st.session_state.random_values["infrared"]))
 uv = st.sidebar.selectbox("UV Reactivity", ["Reactive", "Non-reactive"], index=["Reactive", "Non-reactive"].index(st.session_state.random_values["uv"]))
-electrical = st.sidebar.number_input("Electrical Conductivity", min_value=0.1, max_value=10.0, value=st.session_state.random_values["electrical"])
+electrical = st.sidebar.number_input("Electrical Conductivity", 0.1, 10.0, st.session_state.random_values["electrical"])
 acoustic = st.sidebar.selectbox("Acoustic Response", ["High", "Medium", "Low"], index=["High", "Medium", "Low"].index(st.session_state.random_values["acoustic"]))
 composition = st.sidebar.selectbox("Elemental Composition", ["C, H, O", "H, S, O", "Pb"], index=["C, H, O", "H, S, O", "Pb"].index(st.session_state.random_values["composition"]))
 physical_state = st.sidebar.selectbox("Physical State", ["Liquid", "Solid"], index=["Liquid", "Solid"].index(st.session_state.random_values["physical_state"]))
 
-# Predict button
+# Prediction result display
+st.subheader("Prediction Result")
+st.markdown(
+    f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {st.session_state.predicted_material_type}</b></p>',
+    unsafe_allow_html=True
+)
+
+# Predict button functionality
 if st.sidebar.button("Predict Material Type"):
     new_data = pd.DataFrame({
         "Density (g/cm3)": [density],
@@ -85,29 +93,31 @@ if st.sidebar.button("Predict Material Type"):
     try:
         new_data_scaled = scaler.transform(new_data)
         predicted_label = model.predict(new_data_scaled)
-        predicted_material_type = label_encoder.inverse_transform(predicted_label)[0]
-        
-        # Prediction Result Counting
-        st.session_state.predictions[predicted_material_type] = st.session_state.predictions.get(predicted_material_type, 0) + 1
-        
-        st.subheader("Prediction Result")
-        st.markdown(f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {predicted_material_type}</b></p>', unsafe_allow_html=True)
+        st.session_state.predicted_material_type = label_encoder.inverse_transform(predicted_label)[0]
+
+        # Update predictions count
+        st.session_state.predictions[st.session_state.predicted_material_type] = (
+            st.session_state.predictions.get(st.session_state.predicted_material_type, 0) + 1
+        )
+
+        # Display updated prediction result
+        st.markdown(
+            f'<p style="font-size:24px; color:#F06060;"><b>Predicted Material Type: {st.session_state.predicted_material_type}</b></p>',
+            unsafe_allow_html=True
+        )
+
     except Exception as e:
         st.error(f"An error occurred during prediction: {e}")
 
 # Count display of forecast results
 st.subheader("Prediction Counts")
-if not st.session_state.predictions:
-    st.session_state.predictions = {"Plastic (PP/ABS)": 0, "Lead (Pb)": 0, "Sulfuric Acid (H2SO4)": 0}
-if st.session_state.predictions:
-    df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Predicted Type", "Count"])
-    st.dataframe(df_counts)
-else:
-    st.write("No predictions yet.")
+df_counts = pd.DataFrame(list(st.session_state.predictions.items()), columns=["Predicted Type", "Count"])
+st.dataframe(df_counts)
 
-# reset button
+# Reset button
 if st.button("Reset Counts & History"):
-    st.session_state.predictions = {}
+    st.session_state.predictions = {"Plastic (PP/ABS)": 0, "Lead (Pb)": 0, "Sulfuric Acid (H2SO4)": 0}
     st.session_state.history = []
+    st.session_state.predicted_material_type = ""
     st.success("Counts and history have been reset.")
     st.rerun()
